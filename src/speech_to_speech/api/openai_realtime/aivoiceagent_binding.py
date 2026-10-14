@@ -55,6 +55,7 @@ async def verify_live_token(token: str | None, client: httpx.AsyncClient | None 
     endpoint = java_base_url()
     if not endpoint or not token:
         return False
+
     async def request_with(http: httpx.AsyncClient) -> bool:
         try:
             response = await http.post(

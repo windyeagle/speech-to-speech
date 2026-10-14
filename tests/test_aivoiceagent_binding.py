@@ -1,4 +1,5 @@
 """Offline AIVoiceAgent optional adapter tests. No S2S model download needed."""
+
 import asyncio
 
 import httpx

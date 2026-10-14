@@ -562,9 +562,7 @@ def create_app(
     async def realtime_endpoint(ws: WebSocket) -> None:
         live_token = None
         if aivoiceagent_enabled():
-            live_token = ws.query_params.get(TOKEN_QUERY_KEY) or bearer_from_header(
-                ws.headers.get("authorization")
-            )
+            live_token = ws.query_params.get(TOKEN_QUERY_KEY) or bearer_from_header(ws.headers.get("authorization"))
             if not await verify_live_token(live_token):
                 await ws.close(code=1008, reason="Invalid or expired Live credential")
                 return
