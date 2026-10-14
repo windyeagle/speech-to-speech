@@ -800,8 +800,7 @@ class BaseOpenAICompatibleHandler(BaseHandler[LLMIn, LLMOut], ABC):
                     # Java owns tool authorisation and business actions: never
                     # forward client-provided Realtime function tool schemas.
                     optional_kwargs = {
-                        key: value for key, value in optional_kwargs.items()
-                        if key not in {"tools", "tool_choice"}
+                        key: value for key, value in optional_kwargs.items() if key not in {"tools", "tool_choice"}
                     }
                     extra_headers = java_turn_headers(
                         getattr(turn.runtime_config, "aivoiceagent_token", None),

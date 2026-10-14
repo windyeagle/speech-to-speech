@@ -5,6 +5,7 @@ controller. During the WS/WebRTC handshake S2S validates it against that
 controller. It is then attached only to the S2S -> Java Chat Completions call,
 not sent to unrelated LLM services or echoed in session.updated.
 """
+
 from __future__ import annotations
 
 import os
