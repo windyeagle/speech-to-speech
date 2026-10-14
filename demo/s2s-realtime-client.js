@@ -35,6 +35,7 @@
  * @property {string} voice
  * @property {string} instructions
  * @property {string} [startupGreeting]
+ * @property {boolean} [aivoiceagentManaged]
  * @property {MediaStream} [micStream]
  * @property {() => Promise<MediaStream>} [acquireMic]
  * @property {AudioContext} [audioContext]
@@ -84,6 +85,26 @@ function sdk() {
   const value = globalThis.OpenAIAgentsRealtime;
   if (!value) throw new Error("OpenAI Agents SDK bundle is not loaded");
   return value;
+}
+
+/**
+ * Java-managed sessions must never treat a hidden startup instruction as a
+ * customer utterance. Detect both trusted demo config and a direct Live URL,
+ * because users can connect without a pinned demo server config.
+ *
+ * @param {ClientOptions} options
+ * @param {string} connectionUrl
+ */
+export function shouldSendStartupGreeting(options, connectionUrl) {
+  if (!options.startupGreeting?.trim() || options.aivoiceagentManaged) return false;
+  try {
+    const url = new URL(connectionUrl, "http://localhost");
+    if (url.searchParams.has("aivoiceagent_token")) return false;
+  } catch {
+    // Bad transport URLs are rejected during connect; do not expose a secret
+    // or alter the non-Java demo's previous greeting behavior here.
+  }
+  return true;
 }
 
 export class S2sRealtimeClient extends EventTarget {
@@ -241,7 +262,7 @@ export class S2sRealtimeClient extends EventTarget {
     await this._session.connect({ apiKey: "s2s-local", url });
     if (this.options.transport === "webrtc") this._attachRtcOutput();
     const greeting = this.options.startupGreeting?.trim();
-    if (greeting) {
+    if (greeting && shouldSendStartupGreeting(this.options, url)) {
       this._responseRequested = true;
       this._session.sendMessage(greeting);
     }

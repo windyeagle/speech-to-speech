@@ -327,6 +327,8 @@ let iceServers = [];
 // Optional hidden user prompt supplied by the deployment. When non-empty, the
 // client asks the model to greet once after the initial session configuration.
 let startupGreeting = "";
+// Real Java-owned dialogue forbids synthetic hidden USER startup greetings.
+let aivoiceagentManaged = false;
 // Transport of the LIVE (or starting) conversation — as opposed to
 // `settings.transport`, which is what the NEXT one will use. Drives the
 // camera-snapshot size budget while a call is running.
@@ -908,7 +910,8 @@ async function fetchConfig() {
       // /api/calls proxy refuses to forward anywhere else).
       rtcAvailable = !!json.rtc;
       iceServers = Array.isArray(json.iceServers) ? json.iceServers : [];
-      startupGreeting = typeof json.startupGreeting === "string"
+      aivoiceagentManaged = json.aivoiceagentManaged === true;
+      startupGreeting = !aivoiceagentManaged && typeof json.startupGreeting === "string"
         ? json.startupGreeting.trim()
         : "";
       // The conversation-time limiter rides on the LB being present.
@@ -1418,6 +1421,7 @@ async function doStart(audioContext = null) {
     voice: settings.voice,
     instructions: settings.instructions,
     startupGreeting,
+    aivoiceagentManaged,
     acquireMic: acquireMicStream,
     tools: activeToolDefs(),
     audioOutputId: settings.audioOutputId || "",
