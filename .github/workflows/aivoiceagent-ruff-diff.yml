@@ -1,0 +1,19 @@
+name: Temporary AIVoiceAgent import format diff
+on:
+  push:
+    branches:
+      - feat/java-dialogue-adapter
+permissions:
+  contents: read
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install ruff==0.17.0
+      - name: Print Ruff suggested import patch (no files changed)
+        run: |
+          ruff check --select I --fix --diff \
+            src/speech_to_speech/LLM/base_openai_compatible_language_model.py \
+            src/speech_to_speech/api/openai_realtime/websocket_router.py \
+            tests/test_aivoiceagent_binding.py
