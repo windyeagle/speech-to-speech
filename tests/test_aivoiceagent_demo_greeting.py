@@ -11,16 +11,10 @@ _SPEC.loader.exec_module(_MODULE)
 
 
 def test_java_live_url_disables_bootstrap_user_prompt():
-    assert _MODULE.is_aivoiceagent_live_url(
-        "ws://127.0.0.1:8765/v1/realtime?aivoiceagent_token=fake-secret"
-    )
-    assert _MODULE.is_aivoiceagent_live_url(
-        "wss://localhost:8765/v1/realtime?foo=1&aivoiceagent_token=synthetic"
-    )
+    assert _MODULE.is_aivoiceagent_live_url("ws://127.0.0.1:8765/v1/realtime?aivoiceagent_token=fake-secret")
+    assert _MODULE.is_aivoiceagent_live_url("wss://localhost:8765/v1/realtime?foo=1&aivoiceagent_token=synthetic")
 
 
 def test_generic_demo_remains_unchanged():
-    assert not _MODULE.is_aivoiceagent_live_url(
-        "ws://127.0.0.1:8765/v1/realtime?foo=1"
-    )
+    assert not _MODULE.is_aivoiceagent_live_url("ws://127.0.0.1:8765/v1/realtime?foo=1")
     assert not _MODULE.is_aivoiceagent_live_url("")
