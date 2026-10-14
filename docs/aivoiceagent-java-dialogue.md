@@ -55,10 +55,11 @@ uv run speech-to-speech serve \
   --llm_backend chat-completions \
   --model_name aivoiceagent \
   --responses_api_base_url http://127.0.0.1:8080/v1 \
-  --responses_api_api_key none
+  --responses_api_api_key none \
+  --no_compact_history
 ```
 
-The Chat Completions startup warmup is skipped in this explicitly enabled mode, because no authenticated Live yet exists. Disable speculative/compaction settings for the initial integrated POC if your current launch used them. Keep ASR and TTS on the original Mac MLX-Audio services via their existing flags; do not replace them.
+The Chat Completions startup warmup is skipped in this explicitly enabled mode because no authenticated Live yet exists. **The global S2S CLI default is `compact_history=True`, but Java is authoritative for Chat history.** The S2S AIVoiceAgent adapter automatically disables S2S-local compaction even when the default is enabled, avoiding any unauthenticated background summarization requests. For older checked-out versions, add `--no_compact_history` as a safe immediate workaround (also shown above). Keep existing ASR and TTS parameters for the validated Mac MLX-Audio endpoints.
 
 ## H5 demo
 
