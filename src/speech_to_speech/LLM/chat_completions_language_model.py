@@ -6,7 +6,7 @@ import time
 from collections.abc import Iterator
 from typing import Any, cast
 
-from openai import Stream
+from openai import AuthenticationError, Stream
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionContentPartImageParam,
@@ -313,15 +313,32 @@ class ChatCompletionsApiModelHandler(BaseOpenAICompatibleHandler):
             return
         logger.info(f"Warming up {self.__class__.__name__}")
         start = time.time()
-        self.client.with_options(max_retries=WARMUP_MAX_RETRIES).chat.completions.create(
-            model=self.model_name,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant"},
-                {"role": "user", "content": "Hello"},
-            ],
-            extra_body=self._extra_body,
-            timeout=self.request_timeout,
-        )
+        try:
+            self.client.with_options(max_retries=WARMUP_MAX_RETRIES).chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant"},
+                    {"role": "user", "content": "Hello"},
+                ],
+                extra_body=self._extra_body,
+                timeout=self.request_timeout,
+            )
+        except AuthenticationError as exc:
+            # A misconfigured S2S process may point its model URL at the Java
+            # Live-scoped API without enabling the AIVoiceAgent adapter. A
+            # permanent startup bearer is NOT the remedy: the adapter skips
+            # warmup and authenticates each H5 Live independently.
+            body = exc.body if isinstance(exc.body, dict) else {}
+            if body.get("code") == "INVALID_LIVE_TOKEN":
+                raise RuntimeError(
+                    "AIVoiceAgent Java rejects unauthenticated startup warmup. "
+                    "Do not configure a fixed model API token. Set "
+                    "AIVOICEAGENT_JAVA_BASE_URL=http://127.0.0.1:8080 in the "
+                    "same environment used to start speech-to-speech. "
+                    "Then the adapter skips warmup and validates per-Live "
+                    "tokens when H5 connects."
+                ) from exc
+            raise
         end = time.time()
         logger.info(f"{self.__class__.__name__}:  warmed up! time: {(end - start):.3f} s")
 
