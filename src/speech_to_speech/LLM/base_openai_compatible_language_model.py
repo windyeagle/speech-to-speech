@@ -26,6 +26,11 @@ from openai.types.realtime.realtime_conversation_item_assistant_message import (
 from openai.types.responses import ResponseFunctionToolCall, ResponseOutputMessage, ResponseReasoningItem
 from pydantic import BaseModel, ConfigDict, Field
 
+from speech_to_speech.api.openai_realtime.aivoiceagent_binding import (
+    enabled as aivoiceagent_enabled,
+    java_turn_headers,
+    target_is_java,
+)
 from speech_to_speech.baseHandler import BaseHandler
 from speech_to_speech.LLM.chat import (
     Chat,
@@ -224,6 +229,15 @@ class BaseOpenAICompatibleHandler(BaseHandler[LLMIn, LLMOut], ABC):
         )
 
         self.user_role = user_role
+        self._aivoiceagent_enabled = aivoiceagent_enabled()
+        if self._aivoiceagent_enabled:
+            if not target_is_java(base_url):
+                raise RuntimeError("AIVoiceAgent requires --responses_api_base_url to be Java /v1")
+            if type(self).__name__ != "ChatCompletionsApiModelHandler":
+                raise RuntimeError("AIVoiceAgent currently supports only the chat-completions LLM backend")
+            if compact_history:
+                raise RuntimeError("Disable compact_history for AIVoiceAgent Java-authoritative history")
+        self._aivoiceagent_base_url = base_url
         if (
             api_key is None
             and not os.environ.get("OPENAI_API_KEY")
@@ -780,6 +794,13 @@ class BaseOpenAICompatibleHandler(BaseHandler[LLMIn, LLMOut], ABC):
             generation_started_at_s = perf_counter()
             try:
                 api_input = (serialize_fn or self._serialize)(active_chat)
+                if self._aivoiceagent_enabled:
+                    extra_headers = java_turn_headers(
+                        getattr(turn.runtime_config, "aivoiceagent_token", None),
+                        turn.response_key,
+                        self._aivoiceagent_base_url,
+                    )
+                    optional_kwargs = {**optional_kwargs, "extra_headers": extra_headers}
                 # Images the model actually sees this turn; only these are stripped on
                 # write-back, so an image a fast client injects mid-generation for the
                 # next turn survives (it is not in this serialized snapshot).

@@ -21,6 +21,12 @@ from openai.types.realtime import (
     SessionUpdateEvent,
 )
 
+from speech_to_speech.api.openai_realtime.aivoiceagent_binding import (
+    TOKEN_QUERY_KEY,
+    bearer_from_header,
+    enabled as aivoiceagent_enabled,
+    verify_live_token,
+)
 from speech_to_speech.api.openai_realtime.llm_proxy import LLMProxyConfig, mount_llm_proxy
 from speech_to_speech.api.openai_realtime.pipeline_unit import PipelineUnit, SessionState
 from speech_to_speech.api.openai_realtime.service import (
@@ -552,6 +558,14 @@ def create_app(
 
     @app.websocket("/v1/realtime")
     async def realtime_endpoint(ws: WebSocket) -> None:
+        live_token = None
+        if aivoiceagent_enabled():
+            live_token = ws.query_params.get(TOKEN_QUERY_KEY) or bearer_from_header(
+                ws.headers.get("authorization")
+            )
+            if not await verify_live_token(live_token):
+                await ws.close(code=1008, reason="Invalid or expired Live credential")
+                return
         offered_subprotocols = {
             protocol.strip() for protocol in ws.headers.get("sec-websocket-protocol", "").split(",")
         }
@@ -581,6 +595,8 @@ def create_app(
         try:
             session_id = unit.service.register()
             unit.session.session_id = session_id
+            if aivoiceagent_enabled():
+                unit.service._state(session_id).runtime_config.aivoiceagent_token = live_token
             logger.info(f"Client connected to pipeline {unit.index} (session {session_id})")
 
             # Defensive: drain edge queues and reset events so stale data from a
@@ -682,6 +698,17 @@ def create_app(
         events flow over the 'oai-events' data channel using the same JSON
         protocol as the WebSocket transport.
         """
+        live_token = None
+        if aivoiceagent_enabled():
+            live_token = request.query_params.get(TOKEN_QUERY_KEY) or bearer_from_header(
+                request.headers.get("authorization")
+            )
+            if not await verify_live_token(live_token):
+                return Response(
+                    content="Invalid or expired Live credential",
+                    status_code=401,
+                    media_type="text/plain",
+                )
         if not WEBRTC_AVAILABLE:
             return Response(
                 content="WebRTC support requires the 'webrtc' extra: pip install 'speech-to-speech[webrtc]'",
@@ -716,6 +743,8 @@ def create_app(
             session_id = unit.service.register()
             assert unit.session is not None
             unit.session.session_id = session_id
+            if aivoiceagent_enabled():
+                unit.service._state(session_id).runtime_config.aivoiceagent_token = live_token
             logger.info(f"WebRTC client claiming pipeline {unit.index} (session {session_id})")
 
             # Defensive: drain edge queues and reset events so stale data from a

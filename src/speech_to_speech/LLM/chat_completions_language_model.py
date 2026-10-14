@@ -306,6 +306,11 @@ class ChatCompletionsApiModelHandler(BaseOpenAICompatibleHandler):
     """
 
     def warmup(self) -> None:
+        # Warmup runs before any user Live exists; Java intentionally rejects
+        # unauthenticated LLM calls. Skip it only in explicit AIVoiceAgent mode.
+        if getattr(self, "_aivoiceagent_enabled", False):
+            logger.info("Skipping unbound Chat Completions warmup in AIVoiceAgent mode")
+            return
         logger.info(f"Warming up {self.__class__.__name__}")
         start = time.time()
         self.client.with_options(max_retries=WARMUP_MAX_RETRIES).chat.completions.create(
