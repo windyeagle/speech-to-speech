@@ -797,6 +797,12 @@ class BaseOpenAICompatibleHandler(BaseHandler[LLMIn, LLMOut], ABC):
             try:
                 api_input = (serialize_fn or self._serialize)(active_chat)
                 if getattr(self, "_aivoiceagent_enabled", False):
+                    # Java owns tool authorisation and business actions: never
+                    # forward client-provided Realtime function tool schemas.
+                    optional_kwargs = {
+                        key: value for key, value in optional_kwargs.items()
+                        if key not in {"tools", "tool_choice"}
+                    }
                     extra_headers = java_turn_headers(
                         getattr(turn.runtime_config, "aivoiceagent_token", None),
                         turn.response_key,
