@@ -794,7 +794,7 @@ class BaseOpenAICompatibleHandler(BaseHandler[LLMIn, LLMOut], ABC):
             generation_started_at_s = perf_counter()
             try:
                 api_input = (serialize_fn or self._serialize)(active_chat)
-                if self._aivoiceagent_enabled:
+                if getattr(self, "_aivoiceagent_enabled", False):
                     extra_headers = java_turn_headers(
                         getattr(turn.runtime_config, "aivoiceagent_token", None),
                         turn.response_key,
