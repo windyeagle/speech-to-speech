@@ -238,10 +238,7 @@ class BaseOpenAICompatibleHandler(BaseHandler[LLMIn, LLMOut], ABC):
             if type(self).__name__ != "ChatCompletionsApiModelHandler":
                 raise RuntimeError("AIVoiceAgent currently supports only the chat-completions LLM backend")
             if compact_history:
-                logger.info(
-                    "AIVoiceAgent: disabling local history compaction; "
-                    "Java owns persistent Chat context."
-                )
+                logger.info("AIVoiceAgent: disabling local history compaction; Java owns persistent Chat context.")
                 compact_history = False
         self._aivoiceagent_base_url = base_url
         if (
