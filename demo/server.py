@@ -47,6 +47,8 @@ import logging
 import os
 from urllib.parse import urlsplit, urlunsplit
 
+from aivoiceagent_demo import is_aivoiceagent_live_url
+
 import auth
 import httpx
 import limiter
@@ -115,7 +117,14 @@ DEFAULT_STARTUP_GREETING = (
 )
 # Exposed to the browser through /api/config. Set an empty value to disable the
 # automatic greeting without changing the client bundle.
-STARTUP_GREETING = os.environ.get("STARTUP_GREETING", DEFAULT_STARTUP_GREETING).strip()
+AIVOICEAGENT_MANAGED = is_aivoiceagent_live_url(SPEECH_TO_SPEECH_URL)
+# In Java-authoritative mode a hidden model greeting becomes an ordinary USER
+# turn, polluting the durable Chat and teaching a small model to repeat itself.
+# Never send synthetic welcome messages as user utterances in this mode.
+STARTUP_GREETING = (
+    "" if AIVOICEAGENT_MANAGED
+    else os.environ.get("STARTUP_GREETING", DEFAULT_STARTUP_GREETING).strip()
+)
 
 
 def _webrtc_calls_url(s2s_url: str) -> str:
@@ -217,6 +226,7 @@ def config():
         "rtc": bool(SPEECH_TO_SPEECH_URL),
         "iceServers": RTC_ICE_SERVERS,
         "startupGreeting": STARTUP_GREETING,
+        "aivoiceagentManaged": AIVOICEAGENT_MANAGED,
         "auth": AUTH_ENABLED,
     }
 

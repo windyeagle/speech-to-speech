@@ -203,6 +203,14 @@ By default, each new connection creates one hidden user item asking the model
 for a brief greeting, then requests a response. Besides opening the conversation
 naturally, this warms the same prompt prefix used by the first spoken turn.
 
+**AIVoiceAgent Java-authoritative mode:** if the pinned `SPEECH_TO_SPEECH_URL`
+contains an `aivoiceagent_token`, the hidden greeting is always disabled,
+including if `STARTUP_GREETING` is explicitly supplied. Java persists only
+actual customer turns, so a synthesized welcome prompt must not enter Chat as
+`USER`. The browser adapter also refuses synthetic greetings for an
+AIVoiceAgent-bound URL. The Java server owns the system persona; the demo
+`instructions` field is not the effective LLM system prompt in this mode.
+
 Set `STARTUP_GREETING` to customize the hidden prompt, or set it to an empty
 value to disable automatic generation. The adapter sends it once through the
 new `RealtimeSession` after connection.

@@ -60,9 +60,9 @@ test("history shows per-response server timings on desktop and phone", async (t)
     assert.match(await page.locator(".hist-timings dl").innerText(), /0.00 s/);
     assert.deepEqual(await page.locator(".hist-timings dt").allTextContents(), [
       "E2E time", "VAD end decision", "Smart Turn decision", "Transcription",
-      "Response generation", "Voice synthesis to first audio", "Hold time before response",
+      "Response generation", "Voice synthesis to first audio", "Smart Turn hold (output gate)",
     ]);
-    assert.match(await page.locator(".hist-timings dl").innerText(), /Hold time before response/);
+    assert.match(await page.locator(".hist-timings dl").innerText(), /Smart Turn hold/);
     assert.match(await page.locator(".hist-timings").innerText(), /excluding browser playback/);
     await page.waitForFunction(() => {
       const box = document.querySelector(".hist-timings summary").getBoundingClientRect();

@@ -43,6 +43,9 @@ class RuntimeConfig(BaseModel):
         validate_default=True,
     )
     last_assistant_language: str | None = Field(default=None, exclude=True)
+    # Set ONLY by server-side WS/WebRTC handshake, not session.update.
+    # exclude=True prevents leaking credentials via session.created / updated.
+    aivoiceagent_token: str | None = Field(default=None, exclude=True, repr=False)
 
     @field_validator("session", mode="after")
     @classmethod

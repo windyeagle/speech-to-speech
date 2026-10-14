@@ -1,0 +1,33 @@
+name: AIVoiceAgent S2S binding checks
+on:
+  pull_request:
+    paths:
+      - 'src/speech_to_speech/api/openai_realtime/aivoiceagent_binding.py'
+      - 'tests/test_aivoiceagent_binding.py'
+      - '.github/workflows/aivoiceagent-adapter-checks.yml'
+      - 'src/speech_to_speech/LLM/**'
+      - 'src/speech_to_speech/api/openai_realtime/websocket_router.py'
+      - 'src/speech_to_speech/api/openai_realtime/runtime_config.py'
+  push:
+    branches:
+      - 'feat/java-dialogue-adapter'
+permissions:
+  contents: read
+jobs:
+  offline-binding:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install pytest httpx
+      - run: PYTHONPATH=src python -m pytest -q tests/test_aivoiceagent_binding.py
+      - name: Check modified Python files compile
+        run: |
+          python -m py_compile src/speech_to_speech/api/openai_realtime/aivoiceagent_binding.py
+          python -m py_compile src/speech_to_speech/api/openai_realtime/runtime_config.py
+          python -m py_compile src/speech_to_speech/api/openai_realtime/websocket_router.py
+          python -m py_compile src/speech_to_speech/LLM/base_openai_compatible_language_model.py
+          python -m py_compile src/speech_to_speech/LLM/chat_completions_language_model.py

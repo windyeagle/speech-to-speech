@@ -657,7 +657,8 @@ export class ChatView {
       ["Transcription", timing.stt_s],
       ["Response generation", timing.llm_s],
       ["Voice synthesis to first audio", timing.tts_ttfa_s],
-      ["Hold time before response", timing.version === 2 ? timing.hold_s : timing.smart_wait_s],
+      [timing.version === 2 ? "Smart Turn hold (output gate)" : "Hold time before response",
+       timing.version === 2 ? timing.hold_s : timing.smart_wait_s],
     ];
     for (const [label, value] of stages) {
       const term = document.createElement("dt");
@@ -669,7 +670,7 @@ export class ChatView {
     details.appendChild(list);
     const note = document.createElement("p");
     note.textContent = timing.version === 2
-      ? "E2E: estimated speech end to first generated audio, excluding browser playback. Stages overlap and do not add up."
+      ? "E2E: speech end to first generated audio, excluding browser playback. Smart Turn hold is speculative waiting for possible continued speech, not Java/HTTP latency. It overlaps other stages; do not add these durations."
       : "First audio: VAD handoff to generated audio, excluding browser playback. Stages overlap and do not add up.";
     details.appendChild(note);
     hist.querySelector(".hist-timings")?.remove();
