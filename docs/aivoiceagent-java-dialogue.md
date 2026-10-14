@@ -12,6 +12,36 @@ This feature is **disabled unless** `AIVOICEAGENT_JAVA_BASE_URL` is supplied to 
 6. Java uses authoritative Chat history and final user text only, calls local Ollama and streams OpenAI Chat Completion SSE back to S2S for its unchanged TTS stage. User transcript and successfully completed answer are saved to Java.
 7. Interrupting the speech closes a model response stream; Java marks incomplete/cancelled turns instead of storing incomplete assistant text. **Stopping remote Ollama compute is not fully verified yet.**
 
+## Startup 401: no fixed token required
+
+If S2S logs `Warming up ChatCompletionsApiModelHandler` followed by
+`401 INVALID_LIVE_TOKEN` when its model endpoint is the Java service, **the
+adapter did not activate in that S2S process**. The LLM warmup has no user
+Live, so it must be skipped; it must never use a fixed administrator token.
+
+Run these from the **same terminal** that launches S2S:
+
+```bash
+export AIVOICEAGENT_JAVA_BASE_URL=http://127.0.0.1:8080
+python -c 'from speech_to_speech.api.openai_realtime.aivoiceagent_binding import enabled; print("AIVoiceAgent enabled:", enabled())'
+```
+
+The result must be `True`; the expected log is `Skipping unbound Chat
+Completions warmup in AIVoiceAgent mode`. Use the same Python executable/
+virtualenv as the running `speech-to-speech` command if you have multiple
+venvs. Confirm the installed handler file points at this Fork with:
+
+```bash
+python -c 'import speech_to_speech.LLM.chat_completions_language_model as m; print(m.__file__)'
+```
+
+`AIVOICEAGENT_JAVA_BASE_URL` is the Java origin **without** `/v1`;
+`--responses_api_base_url` includes `/v1`.
+
+A Live bearer is issued at Java `POST /api/v1/services/{id}/lives`, and used
+only in the H5 real-time handshake and subsequent scoped S2S→Java requests.
+It is not a machine-wide model API key.
+
 ## S2S launch configuration
 
 ```bash
