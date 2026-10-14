@@ -914,6 +914,10 @@ async function fetchConfig() {
       startupGreeting = !aivoiceagentManaged && typeof json.startupGreeting === "string"
         ? json.startupGreeting.trim()
         : "";
+      // The visible H5 prompt config only updates S2S session.instructions.
+      // In Java-managed mode it is deliberately not the model's system role.
+      inputInstructions.disabled = aivoiceagentManaged;
+      $("#aivoiceagent-instructions-hint").hidden = !aivoiceagentManaged;
       // The conversation-time limiter rides on the LB being present.
       limiterOn = lbMode;
     }
