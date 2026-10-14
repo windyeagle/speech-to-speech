@@ -14,7 +14,6 @@ from speech_to_speech.api.openai_realtime.aivoiceagent_binding import (
     verify_live_token,
 )
 
-
 TOKEN = "A" * 43
 
 

@@ -28,6 +28,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from speech_to_speech.api.openai_realtime.aivoiceagent_binding import (
     enabled as aivoiceagent_enabled,
+)
+from speech_to_speech.api.openai_realtime.aivoiceagent_binding import (
     java_turn_headers,
     target_is_java,
 )

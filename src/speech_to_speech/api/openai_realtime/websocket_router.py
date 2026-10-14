@@ -24,8 +24,10 @@ from openai.types.realtime import (
 from speech_to_speech.api.openai_realtime.aivoiceagent_binding import (
     TOKEN_QUERY_KEY,
     bearer_from_header,
-    enabled as aivoiceagent_enabled,
     verify_live_token,
+)
+from speech_to_speech.api.openai_realtime.aivoiceagent_binding import (
+    enabled as aivoiceagent_enabled,
 )
 from speech_to_speech.api.openai_realtime.llm_proxy import LLMProxyConfig, mount_llm_proxy
 from speech_to_speech.api.openai_realtime.pipeline_unit import PipelineUnit, SessionState
